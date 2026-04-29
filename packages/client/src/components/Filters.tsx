@@ -14,7 +14,7 @@ interface FiltersProps {
 }
 
 const fieldClass =
-  'flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 h-[38px] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15';
+  'flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 h-[38px] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 dark:focus:border-blue-400';
 
 export function Filters({ values, options, onChange }: FiltersProps) {
   return (

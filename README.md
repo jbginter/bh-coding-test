@@ -46,6 +46,27 @@ yarn type-check
 
 ---
 
+## Project Structure
+
+```
+packages/
+├── shared/          # @shared/types — Player, PlayersResponse, PlayerQueryParams, SortColumn
+├── server/          # @server/api — Express API on port 3001
+│   └── src/
+│       ├── services/        # sleeperService.ts — Sleeper API fetch + TTL cache
+│       ├── utils/           # playerFilters.ts — pure filter / sort / paginate functions
+│       ├── routes/          # players.ts — thin Express router
+│       └── cache.ts         # generic in-memory TTL cache
+└── client/          # @client/web — Next.js app on port 3000
+    └── src/
+        ├── components/      # Filters, PlayerTable, PlayerModal, Pagination + barrel index
+        ├── hooks/           # usePlayers, useMeta, useFavorites + barrel index
+        ├── lib/             # api.ts (API_URL), nflConstants.ts (team/position names)
+        └── pages/           # index.tsx — main page
+```
+
+---
+
 ## API Endpoints
 
 | Method | Path | Description |
@@ -60,7 +81,7 @@ yarn type-check
 |-------|------|---------|-------|
 | `page` | number | 1 | |
 | `limit` | number | 25 | |
-| `sort` | `last_name` \| `position` \| `status` \| `team` | — | |
+| `sort` | `last_name` \| `first_name` \| `position` \| `status` \| `team` | — | |
 | `order` | `asc` \| `desc` | `asc` | |
 | `position` | string | — | exact match |
 | `team` | string | — | exact match |
@@ -76,6 +97,9 @@ All three happen on the server before the response is sent. The Sleeper payload 
 
 The alternative (client-side filtering on a single large fetch) is simpler to implement but falls apart on slow connections and makes sorting and search feel sluggish at scale.
 
+### Separation of concerns in the server
+The server is split into three layers: `sleeperService.ts` owns the Sleeper API fetch and cache, `playerFilters.ts` contains pure filter/sort/paginate functions with no I/O, and `routes/players.ts` is a thin router that wires them together. This makes the business logic independently testable without spinning up Express or hitting the network.
+
 ### In-memory cache with TTL
 The Sleeper API is read-only and the data changes infrequently. A module-level `Map` with a 5-minute TTL is sufficient: zero dependencies, trivially fast, and the cache is populated on first request. Subsequent requests return in microseconds.
 
@@ -86,10 +110,13 @@ Favorites are stored client-side in `localStorage` under `nfl_favorites`. This a
 
 The alternative (server-side favorites) would require a user identity layer (at minimum a session cookie) and a persistence store — a significant scope increase for a feature that works just as well locally.
 
-### No UI component library
-The UI is built with CSS Modules and plain HTML elements. This keeps the dependency footprint small, makes every style decision explicit and reviewable, and avoids the overhead of learning a library's component API under time pressure.
+### Shared types package
+`@shared/types` is the single source of truth for `Player`, `PlayersResponse`, `PlayerQueryParams`, and `SortColumn`. Both the server and client import from it, so a change to the data contract only needs to happen in one place.
 
-The alternative (Tailwind CSS or a component library like MUI/shadcn) would provide more polish faster, but adds build configuration and makes the code harder to read for someone unfamiliar with the library's utility classes.
+### No UI component library
+The UI is built with Tailwind CSS utility classes and plain HTML elements. This keeps the dependency footprint small, makes every style decision explicit and reviewable, and avoids the overhead of learning a library's component API under time pressure.
+
+The alternative (a component library like MUI/shadcn) would provide more polish faster, but adds build configuration and makes the code harder to read for someone unfamiliar with the library's abstractions.
 
 ### Vitest over Jest
 Vitest is zero-config with TypeScript and ESM — no Babel transforms, no `ts-jest` setup. `tsx` is already in the dev dependencies, so Vitest just works.
@@ -99,10 +126,10 @@ Vitest is zero-config with TypeScript and ESM — no Babel transforms, no `ts-je
 ## What I'd Do With One More Hour
 
 - **Infinite scroll** — replace the Prev/Next pagination with an intersection-observer-based infinite scroll for a smoother browsing experience
-- **Deployed preview** — add a `Dockerfile` or Vercel/Railway config so the app has a live URL rather than just local
 - **Broader test coverage** — add integration tests for the Express route itself (using `supertest`) and component tests for the React side (using `@testing-library/react`)
-- **Light/dark mode** — CSS custom properties are already used; toggling a class on `<body>` would be a small addition
 - **Debounced sort** — currently a sort click fires a request immediately; debouncing it slightly would avoid a cascade of requests when a user clicks quickly between columns
+- **Next.JS Proper Implemintation** - I'd setup next JS to have a 1 source for all (server/client) to simplify things more, and have server-side rendering where it could be used. This is less code on the frontend and fast speeds all around
+- **Mobile Updates** - While the page is responsive, I'd spend more time on organizing the table, possibly combining first/last name and removing some of the fields like either Position and/or Teams to only show the more important fields.
 
 ---
 
@@ -113,6 +140,7 @@ Vitest is zero-config with TypeScript and ESM — no Babel transforms, no `ts-je
 - Generating the initial TypeScript interfaces from the Sleeper API response shape
 - Drafting the initial test stubs for the pure filter/sort/paginate functions
 - CSS layout for the table and modal
+- Code organization refactor (splitting the server god file, deduplicating shared constants, adding barrel exports)
 
 **Reviewed and adjusted manually:**
 - The `Object.values()` conversion for the Sleeper response map — the API returns a plain object keyed by player ID, not an array; AI-generated code assumed an array
@@ -120,5 +148,5 @@ Vitest is zero-config with TypeScript and ESM — no Babel transforms, no `ts-je
 - The `noEmit: false` fix in `packages/shared/tsconfig.json` — the root tsconfig sets `noEmit: true` and the shared package inherits it, silently producing no output on build; this required reading the compiled output (or lack of it) to catch
 - The `downlevelIteration` issue in the client — the Next.js tsconfig targets ES5 and spreading a `Set` fails at compile time; replaced with `Array.from()`
 - Test fixture counts — two tests had wrong expected values due to incorrect manual counting; caught by running the suite
+- Import corruption introduced by a bulk rename (a `replace_all` that hit a string it had already partially replaced); caught by reading the git diff before committing
 
-I did not use AI to write the README, reason about tradeoffs, or decide on the overall architecture — those decisions came from reading the requirements and the API response directly.

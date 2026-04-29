@@ -37,7 +37,7 @@ export function PlayerTable({
   }
 
   return (
-    <div className="relative overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <div className="relative overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800">
       {loading && <div className="loading-bar absolute top-0 left-0 right-0 h-[3px] z-[1]" />}
       <table className="w-full border-collapse text-sm">
         <thead className="bg-brand-900 border-b border-brand-800">
@@ -60,7 +60,7 @@ export function PlayerTable({
         <tbody>
           {players.length === 0 && !loading ? (
             <tr>
-              <td colSpan={6} className="text-center py-12 text-gray-400">
+              <td colSpan={6} className="text-center py-12 text-gray-400 dark:text-gray-500">
                 No players found.
               </td>
             </tr>
@@ -68,32 +68,34 @@ export function PlayerTable({
             players.map((p) => (
               <tr
                 key={p.player_id}
-                className="cursor-pointer transition-colors hover:bg-brand-50 [&:last-child_td]:border-b-0"
+                className="cursor-pointer transition-colors hover:bg-brand-50 dark:hover:bg-slate-700 [&:last-child_td]:border-b-0"
                 onClick={() => onRowClick(p)}
               >
                 <td
-                  className="text-center text-lg text-amber-500 px-2 py-3 border-b border-gray-100"
+                  className="text-center text-lg text-amber-500 px-2 py-3 border-b border-gray-100 dark:border-slate-700"
                   onClick={(e) => { e.stopPropagation(); onToggleFavorite(p.player_id); }}
                 >
                   <span className="inline-block hover:scale-110 transition-transform cursor-pointer">
                     {favorites.has(p.player_id) ? '★' : '☆'}
                   </span>
                 </td>
-                <td className="px-4 py-3 border-b border-gray-100 text-gray-900 whitespace-nowrap">{p.last_name ?? '—'}</td>
-                <td className="px-4 py-3 border-b border-gray-100 text-gray-900 whitespace-nowrap">{p.first_name ?? '—'}</td>
-                <td className="px-4 py-3 border-b border-gray-100 text-gray-900 whitespace-nowrap">
+                <td className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">{p.last_name ?? '—'}</td>
+                <td className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">{p.first_name ?? '—'}</td>
+                <td className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">
                   {p.position ? (POSITION_NAMES[p.position] ? `${POSITION_NAMES[p.position]} (${p.position})` : p.position) : '—'}
                 </td>
-                <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
+                <td className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 whitespace-nowrap">
                   <span
                     className={`inline-block px-2 py-[2px] rounded-full text-xs font-medium ${
-                      p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                      p.status === 'Active'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                        : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-400'
                     }`}
                   >
                     {p.status ?? '—'}
                   </span>
                 </td>
-                <td className="px-4 py-3 border-b border-gray-100 text-gray-900 whitespace-nowrap">{p.team ? (TEAM_NAMES[p.team] ?? p.team) : 'Free Agent'}</td>
+                <td className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">{p.team ? (TEAM_NAMES[p.team] ?? p.team) : 'Free Agent'}</td>
               </tr>
             ))
           )}
