@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Player, PlayerQueryParams } from '@shared/types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { API_URL } from '../lib/api';
 
 interface UsePlayersResult {
   players: Player[];

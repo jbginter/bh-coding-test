@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterPlayers, sortPlayers, paginatePlayers } from './players';
+import { filterPlayers, sortPlayers, paginatePlayers } from '../utils/playerFilters';
 import type { Player } from '@shared/types';
 
 const players: Player[] = [

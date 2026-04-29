@@ -1,93 +1,7 @@
 import { Router, Request, Response } from 'express';
-import type { Player, PlayersResponse, PlayerQueryParams } from '@shared/types';
-import * as cache from '../cache';
-
-const SLEEPER_URL = 'https://api.sleeper.app/v1/players/nfl';
-const CACHE_KEY = 'nfl_players';
-
-const NFL_TEAM_NAMES = new Set([
-  'Cardinals', 'Falcons', 'Ravens', 'Bills', 'Panthers', 'Bears', 'Bengals',
-  'Browns', 'Cowboys', 'Broncos', 'Lions', 'Packers', 'Texans', 'Colts',
-  'Jaguars', 'Chiefs', 'Raiders', 'Chargers', 'Rams', 'Dolphins', 'Vikings',
-  'Patriots', 'Saints', 'Giants', 'Jets', 'Eagles', 'Steelers', '49ers',
-  'Seahawks', 'Buccaneers', 'Titans', 'Commanders',
-]);
-
-export async function fetchPlayers(): Promise<Player[]> {
-  const cached = cache.get<Player[]>(CACHE_KEY);
-  if (cached) return cached;
-
-  const res = await fetch(SLEEPER_URL);
-  if (!res.ok) throw new Error(`Sleeper API error: ${res.status}`);
-
-  const raw = (await res.json()) as Record<string, unknown>;
-  const players = Object.values(raw)
-    .filter((p): p is Record<string, unknown> => typeof p === 'object' && p !== null && 'player_id' in p)
-    .map((p) => p as unknown as Player)
-    .filter((p) => !NFL_TEAM_NAMES.has(p.last_name ?? ''))
-    .filter((p) => {
-      const first = (p.first_name ?? '').toLowerCase();
-      const last = (p.last_name ?? '').toLowerCase();
-      if (!first && !last) return false;
-      if (first.includes('invalid') || last.includes('invalid')) return false;
-      return true;
-    });
-
-  cache.set(CACHE_KEY, players);
-  return players;
-}
-
-export function filterPlayers(players: Player[], params: PlayerQueryParams): Player[] {
-  let result = players;
-
-  if (params.position) {
-    result = result.filter((p) => p.position === params.position);
-  }
-  if (params.team) {
-    result = params.team === 'FA'
-      ? result.filter((p) => !p.team)
-      : result.filter((p) => p.team === params.team);
-  }
-  if (params.status) {
-    result = result.filter((p) => p.status === params.status);
-  }
-  if (params.q) {
-    const q = params.q.toLowerCase();
-    result = result.filter((p) => {
-      const full = `${p.first_name ?? ''} ${p.last_name ?? ''}`.toLowerCase();
-      return full.includes(q);
-    });
-  }
-  if (params.first_name) {
-    const fn = params.first_name.toLowerCase();
-    result = result.filter((p) => (p.first_name ?? '').toLowerCase().includes(fn));
-  }
-
-  return result;
-}
-
-export function sortPlayers(players: Player[], sort?: PlayerQueryParams['sort'], order: PlayerQueryParams['order'] = 'asc'): Player[] {
-  if (!sort) return players;
-
-  const dir = order === 'desc' ? -1 : 1;
-
-  return [...players].sort((a, b) => {
-    const av = (a[sort] ?? '') as string;
-    const bv = (b[sort] ?? '') as string;
-    // nulls/empty strings sort last regardless of direction
-    if (!av && bv) return 1;
-    if (av && !bv) return -1;
-    if (!av && !bv) return 0;
-    return av.localeCompare(bv) * dir;
-  });
-}
-
-export function paginatePlayers(players: Player[], page = 1, limit = 25): PlayersResponse {
-  const total = players.length;
-  const start = (page - 1) * limit;
-  const data = players.slice(start, start + limit);
-  return { data, total, page, limit };
-}
+import type { PlayerQueryParams } from '@shared/types';
+import { fetchPlayers } from '../services/sleeperService';
+import { filterPlayers, sortPlayers, paginatePlayers } from '../utils/playerFilters';
 
 const router = Router();
 
@@ -115,7 +29,6 @@ router.get('/', async (req: Request, res: Response) => {
       team: req.query.team as string | undefined,
       status: req.query.status as string | undefined,
       q: req.query.q as string | undefined,
-      first_name: req.query.first_name as string | undefined,
     };
 
     const players = await fetchPlayers();

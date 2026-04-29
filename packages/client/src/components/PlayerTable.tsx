@@ -1,21 +1,19 @@
-import type { Player, PlayerQueryParams } from '@shared/types';
+import type { Player, SortColumn } from '@shared/types';
 import { TEAM_NAMES, POSITION_NAMES } from '../lib/nflConstants';
-
-type SortCol = PlayerQueryParams['sort'];
 
 interface PlayerTableProps {
   players: Player[];
-  sort: SortCol;
+  sort: SortColumn;
   order: 'asc' | 'desc';
   loading: boolean;
   favorites: Set<string>;
   showFavoritesOnly: boolean;
-  onSort: (col: SortCol) => void;
+  onSort: (col: SortColumn) => void;
   onRowClick: (player: Player) => void;
   onToggleFavorite: (id: string) => void;
 }
 
-const COLUMNS: { key: SortCol; label: string }[] = [
+const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'last_name', label: 'Last Name' },
   { key: 'first_name', label: 'First Name' },
   { key: 'position', label: 'Position' },
@@ -33,7 +31,7 @@ export function PlayerTable({
   onRowClick,
   onToggleFavorite,
 }: PlayerTableProps) {
-  function indicator(col: SortCol) {
+  function indicator(col: SortColumn) {
     if (sort !== col || !col) return null;
     return <span className="ml-1 text-brand-200">{order === 'asc' ? '↑' : '↓'}</span>;
   }

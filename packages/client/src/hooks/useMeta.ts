@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { API_URL } from '../lib/api';
 
 interface Meta {
   positions: string[];
@@ -8,15 +7,23 @@ interface Meta {
   statuses: string[];
 }
 
-export function useMeta(): Meta {
+interface UseMetaResult extends Meta {
+  error: string | null;
+}
+
+export function useMeta(): UseMetaResult {
   const [meta, setMeta] = useState<Meta>({ positions: [], teams: [], statuses: [] });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/players/meta`)
       .then((r) => r.json())
       .then(setMeta)
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to fetch player meta:', err);
+        setError('Failed to load filter options');
+      });
   }, []);
 
-  return meta;
+  return { ...meta, error };
 }

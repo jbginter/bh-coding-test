@@ -6,6 +6,21 @@ interface PlayerModalProps {
   onClose: () => void;
 }
 
+const DISPLAY_FIELDS: { key: keyof Player; label: string }[] = [
+  { key: 'position', label: 'Position' },
+  { key: 'status', label: 'Status' },
+  { key: 'team', label: 'Team' },
+  { key: 'age', label: 'Age' },
+  { key: 'number', label: 'Number' },
+  { key: 'height', label: 'Height' },
+  { key: 'weight', label: 'Weight' },
+  { key: 'college', label: 'College' },
+  { key: 'years_exp', label: 'Experience (yrs)' },
+  { key: 'injury_status', label: 'Injury Status' },
+  { key: 'depth_chart_position', label: 'Depth Chart Position' },
+  { key: 'depth_chart_order', label: 'Depth Chart Order' },
+];
+
 export function PlayerModal({ player, onClose }: PlayerModalProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -21,6 +36,11 @@ export function PlayerModal({ player, onClose }: PlayerModalProps) {
   }, [player, onClose]);
 
   if (!player) return null;
+
+  const fields = DISPLAY_FIELDS.filter(({ key }) => {
+    const v = player[key];
+    return v !== null && v !== undefined && v !== '';
+  });
 
   return (
     <div
@@ -46,17 +66,15 @@ export function PlayerModal({ player, onClose }: PlayerModalProps) {
           {player.first_name} {player.last_name}
         </h2>
         <dl className="grid grid-cols-1 gap-2">
-          {Object.entries(player)
-            .filter(([, v]) => v !== null && v !== undefined && v !== '')
-            .map(([k, v]) => (
-              <div
-                key={k}
-                className="flex justify-between gap-4 py-[0.4rem] border-b border-gray-100 last:border-b-0 text-sm"
-              >
-                <dt className="text-gray-500 capitalize shrink-0">{k.replace(/_/g, ' ')}</dt>
-                <dd className="text-gray-900 font-medium text-right break-words">{String(v)}</dd>
-              </div>
-            ))}
+          {fields.map(({ key, label }) => (
+            <div
+              key={key}
+              className="flex justify-between gap-4 py-[0.4rem] border-b border-gray-100 last:border-b-0 text-sm"
+            >
+              <dt className="text-gray-500 shrink-0">{label}</dt>
+              <dd className="text-gray-900 font-medium text-right break-words">{String(player[key])}</dd>
+            </div>
+          ))}
         </dl>
       </div>
     </div>

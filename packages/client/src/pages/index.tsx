@@ -1,16 +1,9 @@
 import { useState, useCallback } from 'react';
-import type { Player, PlayerQueryParams } from '@shared/types';
-import { usePlayers } from '../hooks/usePlayers';
-import { useMeta } from '../hooks/useMeta';
-import { useFavorites } from '../hooks/useFavorites';
-import { Filters } from '../components/Filters';
-import { PlayerTable } from '../components/PlayerTable';
-import { Pagination } from '../components/Pagination';
-import { PlayerModal } from '../components/PlayerModal';
+import type { Player, SortColumn } from '@shared/types';
+import { usePlayers, useMeta, useFavorites } from '../hooks';
+import { Filters, PlayerTable, Pagination, PlayerModal } from '../components';
 
 const LIMIT = 25;
-
-type SortCol = PlayerQueryParams['sort'];
 
 interface FilterState {
   q: string;
@@ -21,14 +14,14 @@ interface FilterState {
 
 export default function Home() {
   const [filters, setFilters] = useState<FilterState>({ q: '', position: '', team: '', status: '' });
-  const [sort, setSort] = useState<SortCol>('last_name');
+  const [sort, setSort] = useState<SortColumn>('last_name');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const { favorites, toggle: toggleFavorite } = useFavorites();
 
-  const meta = useMeta();
+  const { error: metaError, ...meta } = useMeta();
   const { players, total, loading, error } = usePlayers({
     page,
     limit: LIMIT,
@@ -47,7 +40,7 @@ export default function Home() {
     setPage(1);
   }, []);
 
-  const handleSort = useCallback((col: SortCol) => {
+  const handleSort = useCallback((col: SortColumn) => {
     if (!col) return;
     if (sort === col) {
       setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -78,9 +71,9 @@ export default function Home() {
         <Filters values={filters} options={meta} onChange={handleFilterChange} />
       </div>
 
-      {error && (
+      {(error || metaError) && (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-6 text-sm">
-          ⚠ {error}
+          ⚠ {error ?? metaError}
         </div>
       )}
 

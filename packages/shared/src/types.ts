@@ -34,5 +34,6 @@ export interface PlayerQueryParams {
   team?: string;
   status?: string;
   q?: string;
-  first_name?: string;
 }
+
+export type SortColumn = PlayerQueryParams['sort'];
