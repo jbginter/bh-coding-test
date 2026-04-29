@@ -66,6 +66,11 @@ export default function Home() {
             onClick={() => setShowFavoritesOnly((v) => !v)}
           >
             {showFavoritesOnly ? '★ Favorites' : '☆ Show Favorites'}
+            {favorites.size > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-amber-400 text-amber-900 dark:bg-yellow-500 dark:text-yellow-900">
+                {favorites.size}
+              </span>
+            )}
           </button>
           <button
             className="px-3 py-2 border rounded-md text-sm cursor-pointer transition-colors border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-700"

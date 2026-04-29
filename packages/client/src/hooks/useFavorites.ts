@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'nfl_favorites';
 
@@ -18,7 +18,11 @@ interface UseFavoritesResult {
 }
 
 export function useFavorites(): UseFavoritesResult {
-  const [favorites, setFavorites] = useState<Set<string>>(readFromStorage);
+  const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setFavorites(readFromStorage());
+  }, []);
 
   const toggle = useCallback((id: string) => {
     setFavorites((prev) => {

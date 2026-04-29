@@ -1,0 +1,6 @@
+{
+  "buildCommand": "yarn workspace @shared/types build && yarn workspace @client/web build",
+  "outputDirectory": "packages/client/.next",
+  "installCommand": "yarn install --frozen-lockfile",
+  "framework": "nextjs"
+}
